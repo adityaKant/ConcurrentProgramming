@@ -1,0 +1,73 @@
+﻿1. Which STL container, if any, did you use for you thread→value map?
+std::map
+	
+2. Which pattern did you use (fully synchronized object, etc.)?
+I used fully synchronized object (coarse grained synchronization) using reader-writer problem way.
+	
+3. Consider the following pairs of operations:
+a. Set value where the thread does not have a preexisting value.
+b. Set value where the thread has a preexisting value
+c. Attempt to read a non-existing value
+d. Read an existing value
+e. Remove a value
+f. Attempt to remove a non-existing value
+Consider all possible pairs of operations by different threads, and indicate which ones
+conflict. For convenience in grading, please use the following list.
+a,a	YES
+a,b	YES
+a,c	YES
+a,d	YES
+a,e	YES
+a,f	YES
+b,b	YES
+b,c	YES
+b,c	YES
+b,d	YES
+b,e	YES
+b,f	YES
+c,c	NO
+c,d	NO
+c,e	YES
+c,f	NO
+d,d	NO
+d,e	YES
+d,f	NO
+e,e	YES
+e,f	YES
+f,f	NO
+
+4. For each of the conflicting operations, in part 2, indicate whether it involves a data race.
+a,a	NO
+a,b	NO
+a,c	NO
+a,d	NO
+a,e	NO
+a,f	NO
+b,b	NO
+b,c	NO
+b,c	NO
+b,d	NO
+b,e	NO
+b,f	NO
+c,c	NO
+c,d	NO
+c,e	NO
+c,f	NO
+d,d	NO
+d,e	NO
+d,f	NO
+e,e	NO
+e,f	NO
+f,f	NO
+
+5. (COP5618 students only) Consider whether applying some constraints on the way a threadLocal variable is used (for example: not allowing a set after a remove, or knowing the number of threads in advance, or other possibilities) would allow you to offer a correct implementation with less synchronization than the one you provided. You may change the public interface. If you think so, describe your solution and justify its correctness. If you think that it is not possible to do this justify your answer. No implementation is required, just thinking. Hint: Make sure your answer is succinct and clear and use appropriate vocabulary.
+
+To implement the threadLocal class in C++, a mapping has been made from threadId to the value of the threadLocal variable so that each thread can  maintain a separate copy for the variable. To achieve this mapping a STL container has been used. In my implementation of threadLocal class, I have used std::map as the STL container. std::map is internally implemented using a Red Black Tree(RBT). A map has been created for each threadLocal object which contains a key->value pair, where key is the threadId and value is the value of that threadLocal variable for that thread. 
+
+Red Black Trees are self balancing binary search trees. In Red Black Tree, insertion, deletion and updation leads to the reordering of the tree.In my implementation the map is shared between the threads for the particular threadLocal object. In a scenario where no synchronization is used, concurrent operations on the map may result into conflicts. For instance, consider if a thread is trying to insert or delete or modify any entry in the map which will lead to the reordering of the tree, and another thread comes along and tries to do any operation while the reordering is being done, coflict may occur due to operations being processed in inconsistent state. For example, if two threads simultaneously insert a variable in the shared map, then each insertion will cause the red black tree to be reordered and it might result in an inconsistent state of the map.
+
+To handle above mentioned conflicts without using synchronization, a constraint can be imposed on the threadLocal variable:	
+No thread should be allowed to access the shared map concurrently when some thread is performing initialize or modify or delete operation.   
+
+
+
